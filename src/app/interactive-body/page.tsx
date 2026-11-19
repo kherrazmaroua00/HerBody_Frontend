@@ -33,7 +33,7 @@ export default function InteractiveBodyPage() {
           Interactive Body
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-ink/75 sm:text-base">
-          Rotate and zoom to explore. Select the uterus, ovaries, or brain to learn more.
+          Rotate and zoom to explore. Select the uterus, heart, or brain to learn more.
         </p>
       </section>
 
@@ -54,11 +54,7 @@ export default function InteractiveBodyPage() {
             </Suspense>
           </div>
 
-          <div
-            className="flex flex-wrap gap-2"
-            role="group"
-            aria-label="Choose an organ"
-          >
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3" role="group" aria-label="Choose an organ">
             {(Object.keys(ORGANS) as OrganId[]).map((organId) => {
               const organ = ORGANS[organId];
               const isSelected = selectedOrgan === organId;
@@ -68,13 +64,16 @@ export default function InteractiveBodyPage() {
                   type="button"
                   aria-pressed={isSelected}
                   onClick={() => setSelectedOrgan(organId)}
-                  className={`rounded-full border px-4 py-2 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-purple ${
+                  className={`min-w-0 rounded-2xl border p-3 text-left shadow-sm transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-purple ${
                     isSelected
                       ? "border-brand-pink bg-brand-pink text-white"
-                      : "border-brand-purple/15 bg-white text-brand-purple hover:border-brand-pink/50"
+                      : "border-brand-purple/10 bg-white text-brand-purple hover:border-brand-pink/50"
                   }`}
                 >
-                  {organ.label}
+                  <span className="block text-sm font-bold">{organ.label}</span>
+                  <span className={`mt-1 block text-xs leading-4 ${isSelected ? "text-white/85" : "text-ink/65"}`}>
+                    {organ.role}
+                  </span>
                 </button>
               );
             })}
@@ -86,13 +85,6 @@ export default function InteractiveBodyPage() {
 
         <aside className="min-w-0 space-y-5">
           <OrganCard selectedOrgan={selectedOrgan} />
-          <article className="rounded-2xl border border-dashed border-brand-purple/25 bg-white/60 p-5">
-            <span className="inline-flex rounded-full bg-lavender px-3 py-1 text-xs font-semibold text-brand-purple">
-              Coming next
-            </span>
-            <h2 className="mt-4 text-xl font-semibold text-brand-purple">AI companion</h2>
-            <p className="mt-2 text-sm leading-6 text-ink/70">Coming next</p>
-          </article>
         </aside>
       </section>
     </main>

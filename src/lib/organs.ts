@@ -23,16 +23,16 @@ export const ORGANS: Record<OrganId, OrganConfig> = {
     ],
     meshNames: ["organ_uterus"],
   },
-  ovaries: {
-    id: "ovaries",
-    label: "Ovaries",
-    role: "The ovaries store eggs and help produce reproductive hormones.",
+  heart: {
+    id: "heart",
+    label: "Heart",
+    role: "The heart pumps blood through the body to deliver oxygen and nutrients.",
     facts: [
-      "Most people have two ovaries, one on each side of the uterus.",
-      "They release eggs and hormones that help regulate the menstrual cycle.",
-      "Ovaries also contribute to estrogen and progesterone signaling.",
+      "It beats continuously to circulate blood.",
+      "The right and left sides send blood to the lungs and body.",
+      "A healthy routine supports overall cardiovascular wellbeing.",
     ],
-    meshNames: ["organ_ovary_left", "organ_ovary_right"],
+    meshNames: ["organ_heart"],
   },
   brain: {
     id: "brain",

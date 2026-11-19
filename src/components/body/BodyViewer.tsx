@@ -19,29 +19,45 @@ type ViewerErrorBoundaryProps = {
 
 type ViewerErrorBoundaryState = {
   failed: boolean;
+  message: string;
 };
 
 class ViewerErrorBoundary extends Component<
   ViewerErrorBoundaryProps,
   ViewerErrorBoundaryState
 > {
-  state: ViewerErrorBoundaryState = { failed: false };
+  state: ViewerErrorBoundaryState = { failed: false, message: "" };
 
   static getDerivedStateFromError(): ViewerErrorBoundaryState {
-    return { failed: true };
+    return { failed: true, message: "" };
+  }
+
+  componentDidCatch(error: Error) {
+    this.setState({
+      message: error.message,
+    });
   }
 
   render() {
     if (this.state.failed) {
+      const webglUnavailable =
+        this.state.message.toLowerCase().includes("webgl") ||
+        this.state.message.toLowerCase().includes("context");
       return (
         <div className="grid h-full min-h-80 place-items-center p-6 text-center">
           <div>
-            <p className="font-semibold text-brand-purple">The 3D model could not load.</p>
-            <p className="mt-2 text-sm text-ink/70">Check your connection and try again.</p>
+            <p className="font-semibold text-brand-purple">
+              {webglUnavailable ? "WebGL is unavailable." : "The 3D model could not load."}
+            </p>
+            <p className="mt-2 text-sm text-ink/70">
+              {webglUnavailable
+                ? "Enable hardware acceleration or open this page in a WebGL-enabled browser."
+                : "Check your connection and try again."}
+            </p>
             <button
               type="button"
               onClick={() => {
-                this.setState({ failed: false });
+                this.setState({ failed: false, message: "" });
                 this.props.onRetry();
               }}
               className="mt-4 rounded-full bg-brand-purple px-4 py-2 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-purple"
@@ -54,6 +70,47 @@ class ViewerErrorBoundary extends Component<
     }
     return this.props.children;
   }
+}
+
+const ORGAN_IDS = Object.keys(ORGANS) as OrganId[];
+
+// Resolve a hit object to an organ by walking up its parents, so the invisible
+// `collider_*` child meshes resolve to their parent `organ_*` node.
+function organFromObject(object: THREE.Object3D | null): OrganId | null {
+  for (let node = object; node; node = node.parent) {
+    const id = ORGAN_IDS.find((organId) => ORGANS[organId].meshNames.includes(node.name));
+    if (id) return id;
+  }
+  return null;
+}
+
+// The first thing a ray hits is usually the translucent `body_shell` or a non-selectable
+// collider (e.g. `collider_breasts`), so look through the whole hit list for the first organ.
+function organFromHits(intersections: THREE.Intersection[]): OrganId | null {
+  for (const hit of intersections) {
+    const id = organFromObject(hit.object);
+    if (id) return id;
+  }
+  return null;
+}
+
+function hasWebGL() {
+  try {
+    const canvas = document.createElement("canvas");
+    const gl = canvas.getContext("webgl2") ?? canvas.getContext("webgl");
+    gl?.getExtension("WEBGL_lose_context")?.loseContext();
+    return Boolean(gl);
+  } catch {
+    return false;
+  }
+}
+
+// Fail fast when the browser has no WebGL, so ViewerErrorBoundary shows its message and
+// Retry button instead of leaving a blank canvas. Retry remounts this and re-checks.
+function WebGLGuard() {
+  const [supported] = useState(hasWebGL);
+  if (!supported) throw new Error("WebGL is unavailable.");
+  return null;
 }
 
 function Model({ selectedOrgan, onSelect }: BodyViewerProps) {
@@ -78,10 +135,7 @@ function Model({ selectedOrgan, onSelect }: BodyViewerProps) {
       const matchingOrgan = (Object.keys(ORGANS) as OrganId[]).find((organId) =>
         ORGANS[organId].meshNames.includes(mesh.name),
       );
-      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-
-      mesh.material = materials.map((material) => {
-        if (!material) return material;
+      const restyle = (material: THREE.Material) => {
         const cloned = material.clone();
         if (cloned instanceof THREE.MeshStandardMaterial) {
           const isActive =
@@ -90,7 +144,13 @@ function Model({ selectedOrgan, onSelect }: BodyViewerProps) {
           cloned.emissiveIntensity = matchingOrgan === selectedOrgan ? 1.1 : matchingOrgan === hoveredOrgan ? 0.35 : 0;
         }
         return cloned;
-      });
+      };
+
+      // Keep a single material single. Assigning an array to a mesh whose geometry has no
+      // groups (true for every mesh in this GLB) makes three.js draw and raycast nothing.
+      mesh.material = Array.isArray(mesh.material)
+        ? mesh.material.map(restyle)
+        : restyle(mesh.material);
     });
   }, [hoveredOrgan, scene, selectedOrgan]);
 
@@ -110,20 +170,13 @@ function Model({ selectedOrgan, onSelect }: BodyViewerProps) {
     <primitive
       object={scene}
       onClick={(event: ThreeEvent<MouseEvent>) => {
-        const clickedMesh = event.object as THREE.Mesh;
-        const organId = (Object.keys(ORGANS) as OrganId[]).find((id) =>
-          ORGANS[id].meshNames.includes(clickedMesh.name),
-        );
+        const organId = organFromHits(event.intersections);
         if (organId) handleClick(event, organId);
-        else event.stopPropagation();
       }}
-      onPointerOver={(event: ThreeEvent<PointerEvent>) => {
-        event.stopPropagation();
-        const hoveredMesh = event.object as THREE.Mesh;
-        const organId = (Object.keys(ORGANS) as OrganId[]).find((id) =>
-          ORGANS[id].meshNames.includes(hoveredMesh.name),
-        );
-        setHoveredOrgan(organId ?? null);
+      onPointerMove={(event: ThreeEvent<PointerEvent>) => {
+        const organId = organFromHits(event.intersections);
+        setHoveredOrgan(organId);
+        if (organId) event.stopPropagation();
       }}
       onPointerOut={() => setHoveredOrgan(null)}
     />
@@ -142,6 +195,7 @@ export default function BodyViewer(props: BodyViewerProps) {
         setRetryKey((key) => key + 1);
       }}
     >
+      <WebGLGuard />
       <Canvas
         key={retryKey}
         style={{ width: "100%", height: "100%", display: "block" }}

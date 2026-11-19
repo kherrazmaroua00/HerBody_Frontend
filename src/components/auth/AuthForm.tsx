@@ -43,11 +43,17 @@ export default function AuthForm({ mode }: { mode: FormMode }) {
         : { email: values.email, otp: values.otp, newPassword: values.newPassword };
       const data = await apiRequest<unknown>(path, { method: "POST", body: JSON.stringify(body) });
       saveAccessToken(data);
+      if (mode === "login") {
+        sessionStorage.setItem("herbody_user_name", values.email.split("@")[0]);
+      }
+      if (mode === "register") {
+        sessionStorage.setItem("herbody_user_name", values.fullName);
+      }
       if (mode === "login") router.push("/health-journey");
       else if (mode === "register") router.push(`/verify-email?email=${encodeURIComponent(values.email)}`);
       else if (mode === "forgot") router.push(`/reset-password?email=${encodeURIComponent(values.email)}`);
       else if (mode === "reset") router.push("/login");
-      else setMessage("Your email is verified. You can now sign in.");
+      else router.push("/health-journey");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to complete this request.");
     } finally { setLoading(false); }

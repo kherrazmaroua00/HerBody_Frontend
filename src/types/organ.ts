@@ -1,1 +1,1 @@
-export type OrganId = "uterus" | "ovaries" | "brain";
+export type OrganId = "uterus" | "heart" | "brain";
