@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { Suspense, useState } from "react";
-import OrganCard from "@/components/body/OrganCard";
+import ChatSidebar from "@/components/chat/ChatSidebar";
 import { ORGANS } from "@/lib/organs";
 import type { OrganId } from "@/types/organ";
 
@@ -37,7 +37,7 @@ export default function InteractiveBodyPage() {
         </p>
       </section>
 
-      <section className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1.55fr)_minmax(280px,.75fr)]">
+      <section className="mt-6 grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="min-w-0 space-y-4">
           <div className="h-[420px] min-h-[420px] overflow-hidden rounded-2xl border border-brand-purple/10 bg-white/70 shadow-sm sm:h-[520px] lg:h-[620px]">
             <Suspense
@@ -54,7 +54,7 @@ export default function InteractiveBodyPage() {
             </Suspense>
           </div>
 
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3" role="group" aria-label="Choose an organ">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3" role="group" aria-label="Choose an organ">
             {(Object.keys(ORGANS) as OrganId[]).map((organId) => {
               const organ = ORGANS[organId];
               const isSelected = selectedOrgan === organId;
@@ -83,9 +83,7 @@ export default function InteractiveBodyPage() {
           </p>
         </div>
 
-        <aside className="min-w-0 space-y-5">
-          <OrganCard selectedOrgan={selectedOrgan} />
-        </aside>
+        <ChatSidebar selectedOrgan={selectedOrgan} onSelect={setSelectedOrgan} />
       </section>
     </main>
   );

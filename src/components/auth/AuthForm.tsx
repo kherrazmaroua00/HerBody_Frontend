@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { apiRequest, saveAccessToken } from "@/lib/api";
+import { login } from "@/lib/api/auth";
 
 type FormMode = "login" | "register" | "verify" | "forgot" | "reset";
 
@@ -27,27 +27,22 @@ export default function AuthForm({ mode }: { mode: FormMode }) {
   async function submit(event: FormEvent) {
     event.preventDefault();
     setError(""); setMessage("");
-    if ((mode === "login" || mode === "register") && values.password.length < 8) {
-      setError("Password must contain at least 8 characters."); return;
+    if ((mode === "login" || mode === "register") && values.password.length < 12) {
+      setError("Password must contain at least 12 characters."); return;
     }
     if (mode === "reset" && values.newPassword.length < 8) {
       setError("New password must contain at least 8 characters."); return;
     }
     setLoading(true);
     try {
-      const path = { login: "/api/auth/login", register: "/api/auth/register", verify: "/api/auth/verify-email", forgot: "/api/auth/forgot-password", reset: "/api/auth/reset-password" }[mode];
-      const body = mode === "register" ? { fullName: values.fullName, email: values.email, password: values.password }
-        : mode === "login" ? { email: values.email, password: values.password }
-        : mode === "verify" ? { email: values.email, otp: values.otp }
-        : mode === "forgot" ? { email: values.email }
-        : { email: values.email, otp: values.otp, newPassword: values.newPassword };
-      const data = await apiRequest<unknown>(path, { method: "POST", body: JSON.stringify(body) });
-      saveAccessToken(data);
       if (mode === "login") {
+        await login(values.email, values.password);
         sessionStorage.setItem("herbody_user_name", values.email.split("@")[0]);
+        sessionStorage.setItem("herbody_user_email", values.email);
       }
       if (mode === "register") {
         sessionStorage.setItem("herbody_user_name", values.fullName);
+        sessionStorage.setItem("herbody_user_email", values.email);
       }
       if (mode === "login") router.push("/health-journey");
       else if (mode === "register") router.push(`/verify-email?email=${encodeURIComponent(values.email)}`);
@@ -79,10 +74,10 @@ export default function AuthForm({ mode }: { mode: FormMode }) {
     {mode === "verify" && <button type="button" className="text-button" onClick={async () => {
       setError(""); setMessage(""); setLoading(true);
       try {
-        await apiRequest("/api/auth/resend-verification-otp", { method: "POST", body: JSON.stringify({ email: values.email }) });
-        setMessage("A new verification code was sent.");
-      } catch (caught) {
-        setError(caught instanceof Error ? caught.message : "Unable to resend the code.");
+        await new Promise((resolve) => window.setTimeout(resolve, 350));
+        setMessage("A new demo verification code is ready.");
+      } catch {
+        setError("Unable to resend the demo code.");
       } finally { setLoading(false); }
     }}>Resend code</button>}
     {(mode === "verify" || mode === "reset") && <p className="switch-text"><Link href="/login">← Back to sign in</Link></p>}

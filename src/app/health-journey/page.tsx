@@ -1,10 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import Link from "next/link";
-import { Suspense, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
 import OrganCard from "@/components/body/OrganCard";
+import ChatSidebar from "@/components/chat/ChatSidebar";
 import { ORGANS } from "@/lib/organs";
 import type { OrganId } from "@/types/organ";
 
@@ -22,67 +21,13 @@ const BodyViewer = dynamic(
 
 export default function HealthJourneyPage() {
   const [selectedOrgan, setSelectedOrgan] = useState<OrganId | null>(null);
-  const [userName, setUserName] = useState("My Profile");
-  const [loggingOut, setLoggingOut] = useState(false);
-  const router = useRouter();
-
-  useEffect(() => {
-    const savedName = sessionStorage.getItem("herbody_user_name");
-    const savedEmail = sessionStorage.getItem("herbody_user_email");
-    if (savedName) setUserName(savedName);
-    else if (savedEmail) setUserName(savedEmail.split("@")[0]);
-  }, []);
 
   const liveMessage = selectedOrgan
     ? `${ORGANS[selectedOrgan].label} selected.`
     : "No organ selected.";
 
-  async function logout() {
-    setLoggingOut(true);
-    sessionStorage.removeItem("herbody_access_token");
-    sessionStorage.removeItem("herbody_user_name");
-    sessionStorage.removeItem("herbody_user_email");
-    router.push("/login");
-  }
-
   return (
-    <main className="dashboard">
-      <aside className="dashboard-sidebar">
-        <Link href="/health-journey" className="dashboard-brand" aria-label="HerBody home">
-          <span className="brand-mark">♥</span>
-          <span><strong>HerBody</strong><small>FEMTECH<br />EDU</small></span>
-        </Link>
-
-        <p className="dashboard-label">CURRICULUM</p>
-        <nav aria-label="Body explorer sections">
-          <button type="button" className="dashboard-nav active" aria-current="page">
-            <span aria-hidden="true">✣</span>Interactive Body
-          </button>
-          <button
-            type="button"
-            className="dashboard-nav"
-            onClick={() => document.querySelector("#organ-details")?.scrollIntoView({ behavior: "smooth" })}
-          >
-            <span aria-hidden="true">⌁</span>Organ Details
-          </button>
-          <button type="button" className="dashboard-nav" disabled>
-            <span aria-hidden="true">♧</span>AI Companion
-          </button>
-        </nav>
-
-        <div className="dashboard-profile">
-          <span className="profile-avatar" aria-hidden="true">
-            {userName.charAt(0).toUpperCase()}
-          </span>
-          <span><strong>{userName}</strong><small>HerBody Member</small></span>
-          <button type="button" aria-label="Settings" disabled>⚙</button>
-        </div>
-        <button className="logout-button" type="button" onClick={logout} disabled={loggingOut}>
-          <span aria-hidden="true">↪</span>{loggingOut ? "Signing out…" : "Log out"}
-        </button>
-      </aside>
-
-      <section className="dashboard-main">
+    <main className="dashboard-main">
         <header className="dashboard-topbar">
           <span>Anatomy <b>›</b> <strong>Explorer</strong></span>
           <span className="cycle-badge">● DAY 14 · OVULATORY</span>
@@ -142,13 +87,15 @@ export default function HealthJourneyPage() {
               {liveMessage}
             </p>
           </div>
+          <div id="dashboard-chat" className="dashboard-chat">
+            <ChatSidebar selectedOrgan={selectedOrgan} onSelect={setSelectedOrgan} />
+          </div>
         </div>
 
         <footer className="dashboard-footer">
           <span>♧ CLINICAL MODEL · 3D FEMTECH ANATOMICAL ATLAS</span>
           <span>Select pin or rotate angle to view hormonal dynamics</span>
         </footer>
-      </section>
     </main>
   );
 }

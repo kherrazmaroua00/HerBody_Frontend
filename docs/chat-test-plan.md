@@ -1,0 +1,22 @@
+# AI Organ Chat Manual Test Plan
+
+- [ ] Select brain, breasts, heart, ovaries, thyroid, and uterus through the organ buttons and open or update the chat.
+- [ ] Click each corresponding 3D mesh in a WebGL-enabled browser.
+- [ ] Ask one starter question per organ and confirm the organ name is stored with each message.
+- [ ] Switch organs while no request is active and confirm histories remain separate.
+- [ ] Start a request, switch organs, and confirm the answer appears only in the original organ thread.
+- [ ] Open DevTools Network, send a question, and confirm `POST` targets `{NEXT_PUBLIC_API_URL}/api/ai/chat` with the correct `organId`.
+- [ ] Confirm 200 answers render as plain text and source URLs appear only as links for valid http(s) URLs.
+- [ ] Submit an empty or whitespace-only input and confirm nothing sends.
+- [ ] Enter 500 characters and confirm the Send button works; enter more and confirm the input stops at 500.
+- [ ] Confirm Enter sends and Shift+Enter adds a new line.
+- [ ] Confirm the 400 response shows "Please rephrase your question."
+- [ ] Confirm the 401 response shows the sign-in-again message and follows the application's auth behavior.
+- [ ] Confirm the 404 response shows "This organ isn't available yet."
+- [ ] Test 500, offline/network failure, and timeout behavior; confirm a friendly message and working "Try again".
+- [ ] Confirm a failed user message remains visible with error styling and can be retried.
+- [ ] Resize to 360px and confirm no horizontal overflow.
+- [ ] On a 360px screen, open the 85% bottom-sheet chat, press Escape, and confirm it closes.
+- [ ] Confirm focus moves to the drawer close button and returns to the floating chat button on close.
+- [ ] Use Tab and Shift+Tab through all controls and confirm visible keyboard focus.
+- [ ] Confirm the chat log is announced politely and messages have accessible labels.

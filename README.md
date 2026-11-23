@@ -2,7 +2,7 @@
 
 HerBody is a privacy-focused femtech education and health-journey web application. It gives users a calm, accessible interface for learning about their bodies, exploring a 3D-inspired anatomical atlas, and managing an authenticated health journey.
 
-This repository contains the frontend only. The backend is hosted separately and is not modified by this project.
+This repository is frontend-only. Authentication and profile interactions are local demo flows and make no API requests.
 
 ## Product experience
 
@@ -28,9 +28,9 @@ This repository contains the frontend only. The backend is hosted separately and
 - Whole Body, Pelvic System, and Neuroendocrine atlas tabs
 - Anatomical model visual with heart and uterus focus points
 - Uterus detail card with cycle and lining information
-- Functional logout that revokes the backend session and clears the local access token
+- Functional demo logout that clears the local profile session
 
-The current dashboard is a frontend experience. Interactive atlas controls and clinical data are visual UI elements until their corresponding backend features are available.
+The dashboard is a frontend experience. Interactive atlas controls and clinical data are visual demo elements.
 
 ## Technology
 
@@ -40,42 +40,7 @@ The current dashboard is a frontend experience. Interactive atlas controls and c
 - Tailwind CSS `4`
 - ESLint
 - Next.js App Router
-- Next.js rewrites for the backend proxy
-
-## Backend API
-
-Production backend:
-
-<https://herbody-backend.onrender.com>
-
-The frontend uses these existing backend routes:
-
-| Method | Route | Purpose |
-| --- | --- | --- |
-| `POST` | `/api/auth/register` | Create a user account |
-| `POST` | `/api/auth/login` | Authenticate a user |
-| `GET` | `/api/auth/me` | Retrieve the current user |
-| `POST` | `/api/auth/verify-email` | Verify an email with an OTP |
-| `POST` | `/api/auth/resend-verification-otp` | Resend an email verification OTP |
-| `POST` | `/api/auth/forgot-password` | Request a password-reset OTP |
-| `POST` | `/api/auth/reset-password` | Reset a password with an OTP |
-| `POST` | `/api/auth/refresh` | Refresh the access token using the `refreshToken` cookie |
-| `POST` | `/api/auth/logout` | Revoke the refresh session and clear the cookie |
-| `GET` | `/health` | Check API availability |
-| `GET` | `/health/db` | Check database availability |
-
-### API request behavior
-
-API requests are centralized in [`src/lib/api.ts`](./src/lib/api.ts). The helper:
-
-- Sends JSON request bodies
-- Includes cookies with requests
-- Adds a Bearer access token when one is available
-- Parses backend error messages
-- Throws explicit errors for non-success responses
-- Stores access tokens returned by login or registration in `sessionStorage`
-
-The backend currently responds with a wildcard CORS origin. To support credentialed cookies safely in the browser, requests use the Next.js proxy path `/backend-api/*`. The rewrite in [`next.config.ts`](./next.config.ts) forwards those requests to the production backend.
+- No backend integration or API proxy
 
 ## Routes
 
@@ -114,9 +79,8 @@ frontend/
 │   │   │   └── AuthShell.tsx     # Shared authentication layout
 │   │   ├── layout/               # Legacy shared navigation/footer components
 │   │   └── ui/                   # Reusable UI components
-│   └── lib/
-│       └── api.ts                # Backend request and token helpers
-├── next.config.ts                # Backend rewrite and Turbopack configuration
+│   └── lib/                     # Frontend constants and educational data
+├── next.config.ts                # Next.js and Turbopack configuration
 ├── package.json
 └── tsconfig.json
 ```
@@ -125,7 +89,6 @@ frontend/
 
 - Node.js 20 or newer is recommended
 - npm
-- Access to the HerBody backend for authentication requests
 
 ## Local development
 
@@ -138,8 +101,6 @@ npm run dev
 ```
 
 Open <http://localhost:3000>.
-
-The development server uses the same `/backend-api/*` proxy as production, so no local backend URL configuration is required.
 
 ## Available scripts
 
@@ -168,7 +129,7 @@ npm run build
 5. Leave the output directory at its default.
 6. Deploy.
 
-No frontend environment variables are currently required. The production backend URL is configured through the rewrite in [`next.config.ts`](./next.config.ts).
+No frontend environment variables are required.
 
 After deployment, verify:
 
@@ -190,14 +151,13 @@ After deployment, verify:
 ## Privacy and security notes
 
 - The frontend does not contain database credentials or backend secrets.
-- Refresh sessions are handled through the backend `HttpOnly` cookie.
-- Access tokens returned by the backend are stored in browser `sessionStorage`.
+- Demo profile values are kept only in browser `sessionStorage`.
 - Do not commit credentials, API keys, or private user data.
 - The frontend does not diagnose medical conditions or replace a healthcare professional.
 
 ## Scope and future work
 
-The current frontend establishes the visual foundation and authentication flow. Future backend-connected work may include:
+The frontend establishes the visual foundation and demo authentication flow. Future work may include:
 
 - Real user profile data on the dashboard
 - Protected route middleware
@@ -208,4 +168,3 @@ The current frontend establishes the visual foundation and authentication flow. 
 - User preferences and settings
 - Automated frontend tests
 
-These features should be added using existing backend contracts rather than inventing new API routes.
