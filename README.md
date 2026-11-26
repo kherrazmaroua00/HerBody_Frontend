@@ -2,18 +2,17 @@
 
 HerBody is a privacy-focused femtech education and health-journey web application. It gives users a calm, accessible interface for learning about their bodies, exploring a 3D-inspired anatomical atlas, and managing an authenticated health journey.
 
-This repository is frontend-only. Authentication and profile interactions are local demo flows and make no API requests.
+This repository contains the HerBody frontend. Login and AI chat use the configured backend API. Registration, email verification, and password recovery remain unavailable until their backend endpoints are implemented.
+
+The app does not seed health records or use fabricated user data. The documents page starts empty; files selected there remain in browser memory for the current page session and are not uploaded or persisted.
 
 ## Product experience
 
 ### Public experience
 
 - Branded HerBody sign-in screen
-- Confidential account registration
-- Email verification with OTP
-- Verification OTP resend
-- Forgot-password OTP request
-- Password reset using an OTP
+- Login through the backend API
+- Registration, email verification, and password recovery pages that report their unavailable backend support
 - Anonymous exploration links to the educational areas
 - Responsive layout for desktop, tablet, and mobile screens
 
@@ -28,9 +27,9 @@ This repository is frontend-only. Authentication and profile interactions are lo
 - Whole Body, Pelvic System, and Neuroendocrine atlas tabs
 - Anatomical model visual with heart and uterus focus points
 - Uterus detail card with cycle and lining information
-- Functional demo logout that clears the local profile session
+- Logout that clears the local profile session
 
-The dashboard is a frontend experience. Interactive atlas controls and clinical data are visual demo elements.
+The dashboard provides educational anatomy content and interactive atlas controls. User health records are not pre-populated.
 
 ## Technology
 
@@ -40,7 +39,7 @@ The dashboard is a frontend experience. Interactive atlas controls and clinical 
 - Tailwind CSS `4`
 - ESLint
 - Next.js App Router
-- No backend integration or API proxy
+- Backend API integration for login and AI chat; no API proxy
 
 ## Routes
 
@@ -48,10 +47,10 @@ The dashboard is a frontend experience. Interactive atlas controls and clinical 
 | --- | --- |
 | `/` | Login screen |
 | `/login` | Login screen |
-| `/register` | Account registration |
-| `/verify-email` | Email OTP verification and resend |
-| `/forgot-password` | Request a password recovery OTP |
-| `/reset-password` | Reset a password using an OTP |
+| `/register` | Unavailable until the registration API is implemented |
+| `/verify-email` | Unavailable until the verification API is implemented |
+| `/forgot-password` | Unavailable until the recovery API is implemented |
+| `/reset-password` | Unavailable until the reset API is implemented |
 | `/health-journey` | Authenticated-style body atlas dashboard |
 | `/healthy-life` | Healthy Life educational topics |
 
@@ -129,7 +128,7 @@ npm run build
 5. Leave the output directory at its default.
 6. Deploy.
 
-No frontend environment variables are required.
+Set `NEXT_PUBLIC_API_URL` to the backend base URL to enable login and AI chat.
 
 After deployment, verify:
 
@@ -151,20 +150,20 @@ After deployment, verify:
 ## Privacy and security notes
 
 - The frontend does not contain database credentials or backend secrets.
-- Demo profile values are kept only in browser `sessionStorage`.
+- User-provided profile values are kept only in browser `sessionStorage`.
 - Do not commit credentials, API keys, or private user data.
 - The frontend does not diagnose medical conditions or replace a healthcare professional.
 
 ## Scope and future work
 
-The frontend establishes the visual foundation and demo authentication flow. Future work may include:
+The frontend provides login and AI chat integrations. Future work may include:
 
-- Real user profile data on the dashboard
+- Registration, email verification, and password recovery API integrations
 - Protected route middleware
-- Real-time cycle and health data
+- Persistent cycle and health data
+- Secure document uploads and storage
 - Interactive 3D anatomy controls
 - Organ detail pages
-- AI Companion conversations
 - User preferences and settings
 - Automated frontend tests
 

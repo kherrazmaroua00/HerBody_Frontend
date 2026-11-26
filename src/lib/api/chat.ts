@@ -72,9 +72,13 @@ export function normalizeChatResponse(payload: unknown): NormalizedChatResponse 
           return [{ title: source, ...(url ? { url } : {}) }];
         }
         if (!isRecord(source)) return [];
-        const titleValue = source.title ?? source.name ?? source.source ?? source.url ?? "Medical source";
-        const title = typeof titleValue === "string" ? titleValue : "Medical source";
         const url = safeHttpUrl(source.url ?? source.link ?? source.href);
+        const titleValue = source.title ?? source.name ?? source.source;
+        const title =
+          typeof titleValue === "string" && titleValue.trim()
+            ? titleValue
+            : url;
+        if (!title) return [];
         return [{ title, ...(url ? { url } : {}) }];
       })
     : [];

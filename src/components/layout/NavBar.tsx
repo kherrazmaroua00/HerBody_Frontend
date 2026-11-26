@@ -7,7 +7,6 @@ const links = [
   { href: "/", label: "Home" },
   { href: "/healthy-life", label: "Healthy Life" },
   { href: "/interactive-body", label: "Interactive Body" },
-  { href: "/health-journey", label: "Health Journey" },
 ];
 
 export default function NavBar() {

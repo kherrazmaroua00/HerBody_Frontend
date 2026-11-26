@@ -67,6 +67,7 @@ function isChatError(error: unknown): error is ChatError {
 
 function ChatContent({
   selectedOrgan,
+  onSelect,
   closeDrawer,
 }: ChatContentProps) {
   const [histories, setHistories] = useState<Record<OrganId, ChatMessage[]>>({
@@ -239,8 +240,25 @@ function ChatContent({
       </div>
 
       {!selectedOrgan ? (
-        <div className="grid flex-1 place-items-center p-6 text-center text-sm leading-6 text-ink/70">
-          Tap an organ to start a conversation.
+        <div className="flex flex-1 flex-col items-center justify-center p-6 text-center">
+          <p className="text-sm font-semibold text-brand-purple">
+            Choose an organ to start
+          </p>
+          <p className="mt-1 text-xs leading-5 text-ink/65">
+            Select one to see its details and suggested questions.
+          </p>
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            {(Object.keys(ORGANS) as OrganId[]).map((organId) => (
+              <button
+                key={organId}
+                type="button"
+                onClick={() => onSelect(organId)}
+                className="rounded-full border border-brand-purple/15 bg-white px-3 py-2 text-xs font-semibold text-brand-purple transition hover:bg-lavender/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-purple"
+              >
+                {ORGANS[organId].label}
+              </button>
+            ))}
+          </div>
         </div>
       ) : (
         <>
@@ -411,16 +429,14 @@ export default function ChatSidebar({ selectedOrgan, onSelect }: ChatSidebarProp
 
   return (
     <>
-      {selectedOrgan && (
-        <button
-          ref={triggerRef}
-          type="button"
-          onClick={() => setDrawerOpen(true)}
-          className="fixed bottom-5 left-1/2 z-30 -translate-x-1/2 rounded-full bg-brand-purple px-5 py-3 text-sm font-bold text-white shadow-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-purple lg:hidden"
-        >
-          Chat with your {ORGANS[selectedOrgan].label}
-        </button>
-      )}
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={() => setDrawerOpen(true)}
+        className="fixed bottom-5 left-1/2 z-30 -translate-x-1/2 rounded-full bg-brand-purple px-5 py-3 text-sm font-bold text-white shadow-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-purple lg:hidden"
+      >
+        {selectedOrgan ? `Chat with your ${ORGANS[selectedOrgan].label}` : "Open organ chat"}
+      </button>
 
       {drawerOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
@@ -439,8 +455,8 @@ export default function ChatSidebar({ selectedOrgan, onSelect }: ChatSidebarProp
         aria-label="Organ AI companion chat"
         className={
           drawerOpen
-            ? "fixed inset-x-0 bottom-0 z-50 flex h-[85vh] max-h-[85vh] min-h-0 flex-col overflow-hidden rounded-t-3xl border-t border-brand-purple/10 bg-blush shadow-xl lg:sticky lg:top-4 lg:z-auto lg:h-[620px] lg:w-[380px] lg:rounded-2xl lg:border lg:bg-white/80"
-            : "hidden min-h-0 lg:sticky lg:top-4 lg:flex lg:h-[620px] lg:w-[380px] lg:flex-col lg:overflow-hidden lg:rounded-2xl lg:border lg:border-brand-purple/10 lg:bg-white/80 lg:shadow-sm"
+            ? "fixed inset-x-0 bottom-0 z-50 flex h-[85vh] max-h-[85vh] min-h-0 flex-col overflow-hidden rounded-t-3xl border-t border-brand-purple/10 bg-blush shadow-xl lg:sticky lg:top-4 lg:z-auto lg:h-[540px] lg:w-[340px] lg:rounded-2xl lg:border lg:bg-white/80"
+            : "hidden min-h-0 lg:sticky lg:top-4 lg:flex lg:h-[540px] lg:w-[340px] lg:flex-col lg:overflow-hidden lg:rounded-2xl lg:border lg:border-brand-purple/10 lg:bg-white/80 lg:shadow-sm"
         }
       >
         {content}
