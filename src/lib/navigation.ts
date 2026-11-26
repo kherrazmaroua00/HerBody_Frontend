@@ -20,7 +20,7 @@ export type NavigationItem = {
 export const NAVIGATION: NavigationItem[] = [
   {
     label: "Home",
-    href: "/",
+    href: "/health-journey",
     icon: "home",
   },
   {

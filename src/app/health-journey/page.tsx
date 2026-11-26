@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import HomeDashboard from "@/components/home/HomeDashboard";
 
 export default function HealthJourneyPage() {
-  redirect("/");
+  return <HomeDashboard />;
 }

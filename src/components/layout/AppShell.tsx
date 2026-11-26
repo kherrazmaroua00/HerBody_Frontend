@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import Sidebar from "@/components/layout/Sidebar";
 
 const PUBLIC_PATHS = new Set([
+  "/",
   "/login",
   "/register",
   "/forgot-password",

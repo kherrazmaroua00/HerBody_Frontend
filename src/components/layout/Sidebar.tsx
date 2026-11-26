@@ -222,7 +222,7 @@ function SidebarContent({
     <div className="flex h-full min-h-0 flex-col bg-white">
       <div className={`flex h-14 items-center ${collapsed && !drawer ? "justify-center px-2" : "justify-between px-2.5"}`}>
         <Link
-          href="/"
+          href="/health-journey"
           aria-label="HerBody home"
           className="flex items-center gap-2"
         >

@@ -6,3 +6,10 @@ export type ChatMessage = {
   sources?: { title: string; url?: string }[];
   status?: "sending" | "error";
 };
+
+export type ConversationSummary = {
+  id: number;
+  organId: import("./organ").OrganId | null;
+  title: string;
+  updatedAt?: string;
+};

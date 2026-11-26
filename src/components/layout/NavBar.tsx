@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const links = [
-  { href: "/", label: "Home" },
+  { href: "/health-journey", label: "Home" },
   { href: "/healthy-life", label: "Healthy Life" },
   { href: "/interactive-body", label: "Interactive Body" },
 ];
@@ -19,7 +19,7 @@ export default function NavBar() {
         className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-4 sm:px-6"
       >
         <Link
-          href="/"
+          href="/health-journey"
           className="mr-auto shrink-0 text-xl font-bold text-brand-purple focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-purple"
         >
           HerBody

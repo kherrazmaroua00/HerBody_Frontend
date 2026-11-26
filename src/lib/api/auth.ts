@@ -12,22 +12,31 @@ function getAccessTokenPayload(payload: unknown): string | null {
   const data = isRecord(payload.data) ? payload.data : null;
   const candidates = [
     payload.accessToken,
+    payload.access_token,
+    payload.jwt,
     payload.token,
     data?.accessToken,
+    data?.access_token,
+    data?.jwt,
     data?.token,
   ];
   return candidates.find((value): value is string => typeof value === "string" && value.length > 0) ?? null;
 }
 
 export function getAccessToken(): string | null {
-  return sessionStorage.getItem(ACCESS_TOKEN_KEY);
+  return sessionStorage.getItem(ACCESS_TOKEN_KEY) ?? localStorage.getItem(ACCESS_TOKEN_KEY);
 }
 
 export function clearAccessToken(): void {
   sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
 }
 
-export async function login(email: string, password: string): Promise<void> {
+export async function login(
+  email: string,
+  password: string,
+  rememberMe = false,
+): Promise<void> {
   if (!API_URL) throw new Error("API configuration is missing.");
 
   let response: Response;
@@ -50,5 +59,8 @@ export async function login(email: string, password: string): Promise<void> {
 
   const accessToken = getAccessTokenPayload(payload);
   if (!accessToken) throw new Error("Sign-in succeeded, but no access token was returned.");
-  sessionStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+  const storage = rememberMe ? localStorage : sessionStorage;
+  const otherStorage = rememberMe ? sessionStorage : localStorage;
+  storage.setItem(ACCESS_TOKEN_KEY, accessToken);
+  otherStorage.removeItem(ACCESS_TOKEN_KEY);
 }
