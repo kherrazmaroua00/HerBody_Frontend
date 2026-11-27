@@ -2,9 +2,9 @@
 
 HerBody is a privacy-focused femtech education and health-journey web application. It gives users a calm, accessible interface for learning about their bodies, exploring a 3D-inspired anatomical atlas, and managing an authenticated health journey.
 
-This repository contains the HerBody frontend. Login, AI chat, and personal medical documents use the configured backend API. Registration, email verification, and password recovery remain unavailable until their backend endpoints are implemented.
+This repository contains the HerBody frontend. Login, AI chat, personal medical documents, and daily check-ins use the configured backend API. Registration, email verification, and password recovery remain unavailable until their backend endpoints are implemented.
 
-The app does not seed health records or use fabricated user data. The documents page retrieves the authenticated user's records from the backend and uploads files through its medical-documents API.
+The app does not seed health records or use fabricated user data. The documents and daily check-in pages retrieve the authenticated user's records from the backend.
 
 ## Product experience
 
@@ -29,6 +29,7 @@ The app does not seed health records or use fabricated user data. The documents 
 - Uterus detail card with cycle and lining information
 - Logout that clears the local profile session
 - Personal medical document upload, listing, preview, download, and deletion
+- Daily mood check-ins with optional notes, authenticated history, and individual details
 
 The dashboard provides educational anatomy content and interactive atlas controls. User health records are not pre-populated.
 
@@ -40,7 +41,7 @@ The dashboard provides educational anatomy content and interactive atlas control
 - Tailwind CSS `4`
 - ESLint
 - Next.js App Router
-- Backend API integration for login, AI chat, and medical documents; no API proxy
+- Backend API integration for login, AI chat, medical documents, and daily check-ins; no API proxy
 
 ## Routes
 
@@ -55,6 +56,7 @@ The dashboard provides educational anatomy content and interactive atlas control
 | `/health-journey` | Authenticated-style body atlas dashboard |
 | `/healthy-life` | Healthy Life educational topics |
 | `/documents` | Authenticated personal medical documents |
+| `/daily-check-in` | Create daily mood check-ins and view their history/details |
 
 ## Project structure
 
@@ -66,6 +68,7 @@ frontend/
 │   ├── app/
 │   │   ├── forgot-password/      # Password recovery request
 │   │   ├── documents/            # Personal medical document management
+│   │   ├── daily-check-in/       # Daily mood check-ins and history
 │   │   ├── health-journey/       # Logged-in body atlas dashboard
 │   │   ├── healthy-life/         # Educational topic cards
 │   │   ├── login/                # Login page
@@ -79,6 +82,7 @@ frontend/
 │   │   ├── auth/
 │   │   │   ├── AuthForm.tsx      # Shared authentication form logic
 │   │   │   └── AuthShell.tsx     # Shared authentication layout
+│   │   ├── home/                 # Dashboard and check-in components
 │   │   ├── layout/               # Legacy shared navigation/footer components
 │   │   └── ui/                   # Reusable UI components
 │   ├── lib/
@@ -135,7 +139,7 @@ npm run build
 5. Leave the output directory at its default.
 6. Deploy.
 
-Set `NEXT_PUBLIC_API_URL` to the backend base URL to enable login, AI chat, and medical documents.
+Set `NEXT_PUBLIC_API_URL` to the backend base URL to enable login, AI chat, medical documents, and daily check-ins.
 
 After deployment, verify:
 
@@ -144,6 +148,7 @@ After deployment, verify:
 - Password recovery and reset
 - Dashboard navigation
 - Medical document upload, list, preview, download, and deletion
+- Daily check-in creation, history, and details
 - Logout
 - Mobile layout
 
