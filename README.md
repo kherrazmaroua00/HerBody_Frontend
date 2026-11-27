@@ -30,6 +30,7 @@ The app does not seed health records or use fabricated user data. The documents 
 - Logout that clears the local profile session
 - Personal medical document upload, listing, preview, download, and deletion
 - Daily mood check-ins with optional notes, authenticated history, and individual details
+- Period logging with duration-based end dates, next-period estimates from cycle history, and symptom tracking
 
 The dashboard provides educational anatomy content and interactive atlas controls. User health records are not pre-populated.
 
@@ -41,7 +42,7 @@ The dashboard provides educational anatomy content and interactive atlas control
 - Tailwind CSS `4`
 - ESLint
 - Next.js App Router
-- Backend API integration for login, AI chat, medical documents, and daily check-ins; no API proxy
+- Backend API integration for login, AI chat, medical documents, daily check-ins, and cycle symptoms; no API proxy
 
 ## Routes
 
@@ -57,6 +58,7 @@ The dashboard provides educational anatomy content and interactive atlas control
 | `/healthy-life` | Healthy Life educational topics |
 | `/documents` | Authenticated personal medical documents |
 | `/daily-check-in` | Create daily mood check-ins and view their history/details |
+| `/cycle-and-symptoms` | Switch between cycle tracking and symptom views |
 
 ## Project structure
 
@@ -139,7 +141,7 @@ npm run build
 5. Leave the output directory at its default.
 6. Deploy.
 
-Set `NEXT_PUBLIC_API_URL` to the backend base URL to enable login, AI chat, medical documents, and daily check-ins.
+Set `NEXT_PUBLIC_API_URL` to the backend base URL to enable login, AI chat, medical documents, daily check-ins, menstrual cycles, and cycle symptoms. Menstrual-cycle tracking uses the authenticated `/api/menstrual-cycles` endpoints; symptom tracking uses `/api/cycle-symptoms`. Period length determines each saved end date, and next-period estimates use the average interval between saved start dates.
 
 After deployment, verify:
 
@@ -149,6 +151,7 @@ After deployment, verify:
 - Dashboard navigation
 - Medical document upload, list, preview, download, and deletion
 - Daily check-in creation, history, and details
+- Cycle creation, history, and details; symptom creation, history, and details
 - Logout
 - Mobile layout
 
