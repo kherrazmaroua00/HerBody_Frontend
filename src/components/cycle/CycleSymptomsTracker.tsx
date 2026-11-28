@@ -44,8 +44,11 @@ function formatSymptomType(type: string): string {
 
 export default function CycleSymptomsTracker({
   cyclesRefreshKey,
+  initialRecordedOn,
 }: {
   cyclesRefreshKey: number;
+  /** Prefills the symptom date (e.g. a day picked in the calendar). */
+  initialRecordedOn?: string;
 }) {
   const [cycles, setCycles] = useState<MenstrualCycle[]>([]);
   const [cyclesLoading, setCyclesLoading] = useState(true);
@@ -72,8 +75,8 @@ export default function CycleSymptomsTracker({
   const [detailRetry, setDetailRetry] = useState(0);
 
   useEffect(() => {
-    void Promise.resolve().then(() => setRecordedOn(todayForInput()));
-  }, []);
+    void Promise.resolve().then(() => setRecordedOn(initialRecordedOn || todayForInput()));
+  }, [initialRecordedOn]);
 
   useEffect(() => {
     let active = true;
@@ -81,12 +84,20 @@ export default function CycleSymptomsTracker({
       .then((records) => {
         if (!active) return;
         setCycles(records);
+        // From the calendar: the cycle that started most recently on or before the chosen day.
+        const forDate = initialRecordedOn
+          ? records
+            .filter((cycle) => cycle.startDate.slice(0, 10) <= initialRecordedOn)
+            .sort((a, b) => b.startDate.localeCompare(a.startDate))[0]
+          : undefined;
         setCycleId((current) =>
-          records.some((cycle) => String(cycle.id) === current)
-            ? current
-            : records[0]
-              ? String(records[0].id)
-              : "",
+          forDate
+            ? String(forDate.id)
+            : records.some((cycle) => String(cycle.id) === current)
+              ? current
+              : records[0]
+                ? String(records[0].id)
+                : "",
         );
       })
       .catch((requestError: unknown) => {
@@ -102,7 +113,7 @@ export default function CycleSymptomsTracker({
     return () => {
       active = false;
     };
-  }, [cyclesRefreshKey, cyclesRetry]);
+  }, [cyclesRefreshKey, cyclesRetry, initialRecordedOn]);
 
   useEffect(() => {
     let active = true;

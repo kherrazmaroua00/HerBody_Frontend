@@ -13,8 +13,9 @@ import {
 import { NavigationIconView } from "@/components/icons/NavigationIcons";
 import { clearAccessToken } from "@/lib/api/auth";
 import { NAVIGATION, type NavigationItem } from "@/lib/navigation";
+import { SIDEBAR_COLLAPSED_KEY } from "@/lib/preferences";
 
-const SIDEBAR_PREF_KEY = "herbody:sidebar-collapsed";
+const SIDEBAR_PREF_KEY = SIDEBAR_COLLAPSED_KEY;
 
 function subscribeToPreference(callback: () => void) {
   window.addEventListener("storage", callback);

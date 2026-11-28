@@ -10,6 +10,22 @@ import type { OrganId } from "@/types/organ";
 type BodyViewerProps = {
   selectedOrgan: OrganId | null;
   onSelect: (organ: OrganId | null) => void;
+  highlightedOrgans?: readonly OrganId[];
+  markers?: readonly BodyOrganMarker[];
+  facing?: "front" | "back";
+};
+
+export type BodyOrganMarker = {
+  id: string;
+  organId: OrganId;
+  tone: "mint" | "amber" | "rose" | "muted";
+};
+
+const MARKER_COLORS: Record<BodyOrganMarker["tone"], string> = {
+  mint: "#77e7c7",
+  amber: "#f5b84b",
+  rose: "#ed5578",
+  muted: "#a99ab2",
 };
 
 type ViewerErrorBoundaryProps = {
@@ -113,10 +129,41 @@ function WebGLGuard() {
   return null;
 }
 
-function Model({ selectedOrgan, onSelect }: BodyViewerProps) {
+function Model({
+  selectedOrgan,
+  onSelect,
+  highlightedOrgans = [],
+  markers = [],
+  facing = "front",
+}: BodyViewerProps) {
   const gltf = useGLTF(MODEL_URL);
   const scene = useMemo(() => gltf.scene.clone(true), [gltf.scene]);
   const [hoveredOrgan, setHoveredOrgan] = useState<OrganId | null>(null);
+  const linkedOrgans = useMemo(() => new Set(highlightedOrgans), [highlightedOrgans]);
+  const organPositions = useMemo(() => {
+    scene.updateMatrixWorld(true);
+    const positions = new Map<OrganId, THREE.Vector3>();
+
+    for (const organId of ORGAN_IDS) {
+      const bounds = new THREE.Box3();
+      bounds.makeEmpty();
+      scene.traverse((object) => {
+        if (
+          (object as THREE.Mesh).isMesh &&
+          ORGANS[organId].meshNames.includes(object.name)
+        ) {
+          bounds.union(new THREE.Box3().setFromObject(object));
+        }
+      });
+
+      if (!bounds.isEmpty()) {
+        const center = bounds.getCenter(new THREE.Vector3());
+        positions.set(organId, scene.worldToLocal(center));
+      }
+    }
+
+    return positions;
+  }, [scene]);
 
   useEffect(() => {
     const brandPink =
@@ -138,10 +185,12 @@ function Model({ selectedOrgan, onSelect }: BodyViewerProps) {
       const restyle = (material: THREE.Material) => {
         const cloned = material.clone();
         if (cloned instanceof THREE.MeshStandardMaterial) {
-          const isActive =
-            matchingOrgan === selectedOrgan || matchingOrgan === hoveredOrgan;
-          cloned.emissive.copy(isActive ? brandPink : new THREE.Color("black"));
-          cloned.emissiveIntensity = matchingOrgan === selectedOrgan ? 1.1 : matchingOrgan === hoveredOrgan ? 0.35 : 0;
+          const isSelected = matchingOrgan === selectedOrgan;
+          const isHovered = matchingOrgan === hoveredOrgan;
+          const isLinked = matchingOrgan !== undefined && linkedOrgans.has(matchingOrgan);
+          const intensity = isSelected ? 1.1 : isHovered ? 0.35 : isLinked ? 0.45 : 0;
+          cloned.emissive.copy(intensity ? brandPink : new THREE.Color("black"));
+          cloned.emissiveIntensity = intensity;
         }
         return cloned;
       };
@@ -152,7 +201,7 @@ function Model({ selectedOrgan, onSelect }: BodyViewerProps) {
         ? mesh.material.map(restyle)
         : restyle(mesh.material);
     });
-  }, [hoveredOrgan, scene, selectedOrgan]);
+  }, [hoveredOrgan, linkedOrgans, scene, selectedOrgan]);
 
   useEffect(() => {
     document.body.style.cursor = hoveredOrgan ? "pointer" : "";
@@ -167,19 +216,51 @@ function Model({ selectedOrgan, onSelect }: BodyViewerProps) {
   }
 
   return (
-    <primitive
-      object={scene}
-      onClick={(event: ThreeEvent<MouseEvent>) => {
-        const organId = organFromHits(event.intersections);
-        if (organId) handleClick(event, organId);
-      }}
-      onPointerMove={(event: ThreeEvent<PointerEvent>) => {
-        const organId = organFromHits(event.intersections);
-        setHoveredOrgan(organId);
-        if (organId) event.stopPropagation();
-      }}
-      onPointerOut={() => setHoveredOrgan(null)}
-    />
+    <group rotation={[0, facing === "back" ? Math.PI : 0, 0]}>
+      <primitive
+        object={scene}
+        onClick={(event: ThreeEvent<MouseEvent>) => {
+          const organId = organFromHits(event.intersections);
+          if (organId) handleClick(event, organId);
+        }}
+        onPointerMove={(event: ThreeEvent<PointerEvent>) => {
+          const organId = organFromHits(event.intersections);
+          setHoveredOrgan(organId);
+          if (organId) event.stopPropagation();
+        }}
+        onPointerOut={() => setHoveredOrgan(null)}
+      />
+      {markers.map((marker) => {
+        const position = organPositions.get(marker.organId);
+        if (!position) return null;
+
+        const color = MARKER_COLORS[marker.tone];
+        return (
+          <group
+            key={marker.id}
+            position={position}
+            onClick={(event: ThreeEvent<MouseEvent>) => {
+              event.stopPropagation();
+              onSelect(marker.organId);
+            }}
+            onPointerOver={(event: ThreeEvent<PointerEvent>) => {
+              event.stopPropagation();
+              setHoveredOrgan(marker.organId);
+            }}
+            onPointerOut={() => setHoveredOrgan(null)}
+          >
+            <mesh renderOrder={11}>
+              <sphereGeometry args={[0.078, 20, 20]} />
+              <meshBasicMaterial color={color} transparent opacity={0.16} depthTest={false} />
+            </mesh>
+            <mesh renderOrder={12}>
+              <sphereGeometry args={[0.034, 20, 20]} />
+              <meshBasicMaterial color={color} depthTest={false} />
+            </mesh>
+          </group>
+        );
+      })}
+    </group>
   );
 }
 

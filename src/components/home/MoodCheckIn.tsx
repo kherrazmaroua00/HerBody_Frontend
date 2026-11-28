@@ -8,6 +8,16 @@ import {
 } from "@/lib/api/check-ins";
 import CheckInMoodIcon, { CHECKIN_MOOD_LABELS } from "@/components/home/CheckInMoodIcon";
 
+/** Small AI sparkle shown when the mood is described in text ("Other"). */
+function SparkleIcon({ className }: { className?: string }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M12 2.5c.4 0 .7.3.8.7l.9 3.6a5 5 0 0 0 3.5 3.5l3.6.9c.4.1.7.4.7.8s-.3.7-.7.8l-3.6.9a5 5 0 0 0-3.5 3.5l-.9 3.6c-.1.4-.4.7-.8.7s-.7-.3-.8-.7l-.9-3.6a5 5 0 0 0-3.5-3.5l-3.6-.9a.8.8 0 0 1 0-1.6l3.6-.9a5 5 0 0 0 3.5-3.5l.9-3.6c.1-.4.4-.7.8-.7Z" />
+      <path d="M19 2c.2 0 .4.1.4.3l.3 1.1c.1.4.4.7.8.8l1.1.3c.2 0 .3.2.3.4s-.1.4-.3.4l-1.1.3c-.4.1-.7.4-.8.8l-.3 1.1c0 .2-.2.3-.4.3s-.4-.1-.4-.3l-.3-1.1a1.2 1.2 0 0 0-.8-.8l-1.1-.3c-.2 0-.3-.2-.3-.4s.1-.4.3-.4l1.1-.3c.4-.1.7-.4.8-.8l.3-1.1c0-.2.2-.3.4-.3Z" opacity=".6" />
+    </svg>
+  );
+}
+
 export default function MoodCheckIn({
   compact = false,
   onCreated,
@@ -132,16 +142,34 @@ export default function MoodCheckIn({
               >
                 <CheckInMoodIcon mood={mood} className={`shrink-0 ${compact ? "size-4" : "size-5"}`} />
                 {CHECKIN_MOOD_LABELS[mood]}
+                {mood === "other" && (
+                  <SparkleIcon className={`shrink-0 text-brand-pink ${compact ? "size-3" : "size-3.5"}`} />
+                )}
               </button>
             );
           })}
         </div>
 
-        <label className={`block font-semibold text-ink/75 ${compact ? "mt-3 text-xs" : "mt-4 text-sm"}`} htmlFor={compact ? "home-check-in-note" : "daily-check-in-note"}>
-          {selectedMood === "other" ? "Describe your mood" : "Note (optional)"}
-          {selectedMood === "other" && <span className="text-brand-pink"> *</span>}
-        </label>
+        <div className={`flex flex-wrap items-center justify-between gap-2 ${compact ? "mt-3" : "mt-4"}`}>
+          <label className={`block font-semibold text-ink/75 ${compact ? "text-xs" : "text-sm"}`} htmlFor={compact ? "home-check-in-note" : "daily-check-in-note"}>
+            {selectedMood === "other" ? "Describe your mood" : "Note (optional)"}
+            {selectedMood === "other" && <span className="text-brand-pink"> *</span>}
+          </label>
+          {selectedMood === "other" && (
+            <span
+              id={compact ? "home-mood-detection-hint" : "daily-mood-detection-hint"}
+              title="Your mood can be detected from what you write."
+              className={`inline-flex items-center gap-1 rounded-full border border-brand-purple/15 bg-lavender/50 font-semibold text-brand-purple ${
+                compact ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-[11px]"
+              }`}
+            >
+              <SparkleIcon className={compact ? "size-3" : "size-3.5"} />
+              Mood detection from your text
+            </span>
+          )}
+        </div>
         <textarea
+          aria-describedby={selectedMood === "other" ? (compact ? "home-mood-detection-hint" : "daily-mood-detection-hint") : undefined}
           id={compact ? "home-check-in-note" : "daily-check-in-note"}
           value={note}
           onChange={(event) => {
@@ -152,7 +180,11 @@ export default function MoodCheckIn({
           disabled={loading || alreadyCheckedIn}
           maxLength={500}
           required={selectedMood === "other"}
-          placeholder={selectedMood === "other" ? "Tell us what you are feeling..." : "Add a note if you want to share more..."}
+          placeholder={
+            selectedMood === "other"
+              ? "Tell us what you are feeling in your own words, and we'll detect your mood..."
+              : "Add a note if you want to share more..."
+          }
           rows={compact ? 2 : 3}
           className={`mt-2 w-full resize-y rounded-xl border border-[#eadcf4] bg-white text-ink outline-none placeholder:text-ink/45 focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/15 ${
             compact ? "px-3 py-2 text-xs leading-5" : "px-4 py-2 text-sm leading-6"

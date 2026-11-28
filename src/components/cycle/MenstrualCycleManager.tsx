@@ -2,6 +2,12 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import {
+  averagePeriodDuration,
+  dateDayNumber,
+  dateFromDayNumber,
+  estimateNextPeriod,
+} from "@/lib/cycle-estimates";
+import {
   createMenstrualCycle,
   getMenstrualCycle,
   getMenstrualCycles,
@@ -18,17 +24,6 @@ function formatCycleDate(value: string): string {
   }).format(date);
 }
 
-function dateDayNumber(value: string): number | null {
-  const date = new Date(`${value.slice(0, 10)}T00:00:00Z`);
-  return Number.isNaN(date.getTime())
-    ? null
-    : Math.floor(date.getTime() / 86_400_000);
-}
-
-function dateFromDayNumber(day: number): string {
-  return new Date(day * 86_400_000).toISOString().slice(0, 10);
-}
-
 function todayForInput(): string {
   const today = new Date();
   const year = today.getFullYear();
@@ -42,40 +37,12 @@ function addDays(value: string, days: number): string {
   return day === null ? "" : dateFromDayNumber(day + days);
 }
 
-function averagePeriodDuration(cycles: MenstrualCycle[]): number | null {
-  const durations = cycles.flatMap((cycle) => {
-    const start = dateDayNumber(cycle.startDate);
-    const end = dateDayNumber(cycle.endDate);
-    return start !== null && end !== null && end >= start ? [end - start + 1] : [];
-  });
-  return durations.length
-    ? Math.round(durations.reduce((sum, duration) => sum + duration, 0) / durations.length)
-    : null;
-}
-
-function estimateNextPeriod(cycles: MenstrualCycle[]): {
-  averageCycleLength: number;
-  nextStartDate: string;
-} | null {
-  const startsByDay = new Map<number, string>();
-  for (const cycle of cycles) {
-    const date = cycle.startDate.slice(0, 10);
-    const day = dateDayNumber(date);
-    if (day !== null) startsByDay.set(day, date);
-  }
-  const starts = Array.from(startsByDay, ([day, date]) => ({ day, date }))
-    .sort((left, right) => left.day - right.day);
-  if (starts.length < 2) return null;
-
-  const intervals = starts.slice(1).map((current, index) => current.day - starts[index].day);
-  const averageCycleLength = Math.round(
-    intervals.reduce((sum, interval) => sum + interval, 0) / intervals.length,
-  );
-  const latestStart = starts[starts.length - 1];
-  return {
-    averageCycleLength,
-    nextStartDate: dateFromDayNumber(latestStart.day + averageCycleLength),
-  };
+function periodLengthLabel(cycle: MenstrualCycle): string {
+  const start = dateDayNumber(cycle.startDate);
+  const end = dateDayNumber(cycle.endDate);
+  if (start === null || end === null || end < start) return `${cycle.startDate} to ${cycle.endDate}`;
+  const days = end - start + 1;
+  return `${days}-day period`;
 }
 
 function isConflict(error: unknown): boolean {
@@ -84,15 +51,18 @@ function isConflict(error: unknown): boolean {
 
 export default function MenstrualCycleManager({
   onCreated,
+  initialStartDate,
 }: {
   onCreated: () => void;
+  /** Prefills "Log a period" (e.g. a day picked in the calendar). */
+  initialStartDate?: string;
 }) {
   const [cycles, setCycles] = useState<MenstrualCycle[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [retry, setRetry] = useState(0);
 
-  const [startDate, setStartDate] = useState("");
+  const [startDate, setStartDate] = useState(initialStartDate ?? "");
   const [periodLength, setPeriodLength] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
@@ -219,7 +189,7 @@ export default function MenstrualCycleManager({
     : "";
 
   return (
-    <section className="min-h-full rounded-3xl border border-[#eadcf4] bg-white p-3 shadow-[0_3px_12px_rgba(80,43,108,0.04)] sm:p-4">
+    <section className="rounded-3xl border border-[#eadcf4] bg-white p-3 shadow-[0_3px_12px_rgba(80,43,108,0.04)] sm:p-4">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <span className="inline-flex rounded-full border border-brand-pink/20 bg-brand-pink/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-brand-pink">
@@ -246,8 +216,8 @@ export default function MenstrualCycleManager({
         </button>
       </div>
 
-      <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-        <form className="space-y-2 rounded-2xl bg-[#fcf9fe] p-3" onSubmit={saveCycle}>
+      <div className="mt-3 grid items-start gap-3 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+        <form className="space-y-2 rounded-2xl bg-[#fcf9fe] p-3 sm:sticky sm:top-0" onSubmit={saveCycle}>
           <div className="flex items-center justify-between gap-2">
             <h3 className="text-sm font-bold text-ink">Log a period</h3>
             <button
@@ -400,7 +370,7 @@ export default function MenstrualCycleManager({
             </div>
           )}
 
-          <div className="mt-4">
+          <div className="mt-3">
             {loading ? (
               <div className="flex min-h-28 items-center justify-center gap-3 text-sm text-brand-purple/75" role="status">
                 <span className="size-5 animate-spin rounded-full border-2 border-brand-purple/20 border-t-brand-purple" aria-hidden="true" />
@@ -427,17 +397,15 @@ export default function MenstrualCycleManager({
                 <p className="mt-1 text-xs text-ink/60">Your cycle history will appear here.</p>
               </div>
             ) : (
-              <ul className="max-h-[32dvh] space-y-3 overflow-y-auto pr-1">
+              <ul className="space-y-2">
                 {sortedCycles.map((cycle) => (
-                  <li key={String(cycle.id)} className="rounded-2xl border border-[#eadcf4] bg-[linear-gradient(145deg,#fff,#fcf8ff)] p-4">
+                  <li key={String(cycle.id)} className="rounded-2xl border border-[#eadcf4] bg-[linear-gradient(145deg,#fff,#fcf8ff)] px-4 py-3">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <h4 className="text-sm font-bold text-ink">
                           {formatCycleDate(cycle.startDate)} – {formatCycleDate(cycle.endDate)}
                         </h4>
-                        <p className="mt-1 text-xs text-ink/55">
-                          {cycle.startDate} to {cycle.endDate}
-                        </p>
+                        <p className="mt-0.5 text-xs text-ink/55">{periodLengthLabel(cycle)}</p>
                       </div>
                       <button
                         type="button"
@@ -453,7 +421,7 @@ export default function MenstrualCycleManager({
                       </button>
                     </div>
                     {cycle.notes && (
-                      <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-6 text-ink/70">
+                      <p className="mt-1.5 whitespace-pre-wrap break-words text-xs leading-5 text-ink/65">
                         {cycle.notes}
                       </p>
                     )}

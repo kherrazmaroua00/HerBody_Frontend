@@ -117,3 +117,13 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .sidebar-drawer { animation: none; }
 }
+
+/* Settings → Reduce animations */
+html[data-reduce-motion="true"] *,
+html[data-reduce-motion="true"] *::before,
+html[data-reduce-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
